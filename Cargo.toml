@@ -1,0 +1,11 @@
+[package]
+name = "modenv"
+version = "0.3.0"
+authors = ["Kurt Wolf <kurtwolfbuilds@gmail.com>"]
+edition = "2018"
+description = "A tool to easily manage .env files and keep them consistent."
+license = "MIT"
+repository = "https://github.com/kurtbuilds/modenv"
+
+[dependencies]
+clap = { version = "3.0.0-beta.4", features = ["color", "env", "suggestions"]}
