@@ -47,7 +47,7 @@ impl EnvFile {
     pub fn contains(&self, key: &str) -> bool {
         self.lines.iter().any(|p| match p {
             Line::Blank => false,
-            Line::Pair(k, _) => k.eq(key),
+            Line::Pair(k, v) => k == key && !v.is_empty(),
             Line::Comment(_) => false,
         })
     }
@@ -70,9 +70,7 @@ impl EnvFile {
                 Line::Blank => {}
                 Line::Pair(k, existing_value) => {
                     if key == k {
-                        if value == "" {
-                            return
-                        } else if value == existing_value {
+                        if value == existing_value {
                             eprintln!("Key {} already contains this value in {}", &key, self.path.display());
                             return
                         }
