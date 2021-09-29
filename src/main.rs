@@ -132,11 +132,11 @@ fn find_all_envfile_paths(ignore: &PathBuf) -> Vec<PathBuf> {
 
 fn quit_if_exists(pairs: &Vec<Pair>, envfile: &EnvFile, other_envfiles: &Vec<EnvFile>) {
     for pair in pairs {
-        if envfile.contains(&pair.key) {
+        if envfile.has_value(&pair.key) {
             exit_with(&format!("Key {} already exists in {}. Use -f to force.", pair.key, envfile.path.display()));
         }
         for env in other_envfiles {
-            if env.contains(&pair.key) {
+            if env.has_value(&pair.key) {
                 exit_with(&format!("Key {} already exists in {}. Use -f to force.", pair.key, env.path.display()));
             }
         }

@@ -44,10 +44,18 @@ impl EnvFile {
         }
     }
 
-    pub fn contains(&self, key: &str) -> bool {
+    pub fn has_value(&self, key: &str) -> bool {
         self.lines.iter().any(|p| match p {
             Line::Blank => false,
             Line::Pair(k, v) => k == key && !v.is_empty(),
+            Line::Comment(_) => false,
+        })
+    }
+
+    pub fn has_key(&self, key: &str) -> bool {
+        self.lines.iter().any(|p| match p {
+            Line::Blank => false,
+            Line::Pair(k, v) => k == key,
             Line::Comment(_) => false,
         })
     }

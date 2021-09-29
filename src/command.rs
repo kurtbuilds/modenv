@@ -64,7 +64,7 @@ pub fn missing_keys(source_env: &EnvFile, dest_env: &EnvFile) -> Vec<String> {
             Line::Comment(_) => None,
         })
         .for_each(|key| {
-            if !dest_env.contains(key) {
+            if !dest_env.has_key(key) {
                 missing.push(key.to_string());
             }
         });
