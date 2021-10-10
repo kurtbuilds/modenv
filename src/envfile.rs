@@ -81,10 +81,14 @@ impl EnvFile {
                         if value == existing_value {
                             eprintln!("Key {} already contains this value in {}", &key, self.path.display());
                             return
+                        } else if value.is_empty() && !existing_value.is_empty() {
+                            eprintln!("Key {} already contains a value in {}", &key, self.path.display());
+                            return
+                        } else {
+                            *line = Line::Pair(key.to_string(), value.to_string());
+                            eprintln!("Updated value for {} in {}", &key, self.path.display());
+                            return
                         }
-                        *line = Line::Pair(key.to_string(), value.to_string());
-                        eprintln!("Updated value for {} in {}", &key, self.path.display());
-                        return
                     }
                 }
                 Line::Comment(_) => {}
