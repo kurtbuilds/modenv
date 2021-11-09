@@ -1,8 +1,8 @@
 [package]
 name = "modenv"
 version = "0.3.8"
-authors = ["Kurt Wolf <kurtwolfbuilds@gmail.com>"]
 edition = "2018"
+authors = ["Kurt Wolf <kurtwolfbuilds@gmail.com>"]
 description = "A tool to easily manage .env files and keep them consistent."
 license = "MIT"
 repository = "https://github.com/kurtbuilds/modenv"
