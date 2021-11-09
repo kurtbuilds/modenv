@@ -32,7 +32,7 @@ version:
 
 # Bump version. level=major,minor,patch
 bump level:
-    git diff-index --exit-code HEAD > /dev/null || echo You have untracked changes. Commit your changes before bumping the version. && exit 1
+    git diff-index --exit-code HEAD > /dev/null || (echo You have untracked changes. Commit your changes before bumping the version. && exit 1)
     cargo bump {{level}}
     git commit -am "Bump {{level}} version"
     git tag v$(rg -o "version = \"0.3.5\"" Cargo.toml)
