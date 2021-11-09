@@ -32,7 +32,7 @@ bump level:
     cargo bump {{level}}
     git commit -am "Bump {{level}} version"
     git tag v$(rg  "version = \"([0-9.]+)\"" -r '$1' Cargo.toml)
-    git push
+    git push origin v$(rg  "version = \"([0-9.]+)\"" -r '$1' Cargo.toml)
 
 publish:
     cargo publish
