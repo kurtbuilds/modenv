@@ -1,3 +1,4 @@
+Links: [Source](https://github.com/kurtbuilds/modenv) | [crates.io](https://crates.io/crates/modenv)
 
 `modenv` is a tool to update and keep consistent multiple .env files. 
 It is designed to be extremely user-friendly, with helpful error messages, and importantly, 
