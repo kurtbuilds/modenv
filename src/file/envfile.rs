@@ -1,6 +1,5 @@
 use std::{fs, io};
 use std::path::PathBuf;
-use crate::exit_with;
 
 #[derive(Clone, Debug)]
 pub struct Pair {
@@ -44,6 +43,21 @@ impl EnvFile {
         }
     }
 
+    pub fn remove(&mut self, key: &str) {
+        let path = self.path.display();
+        self.lines.retain(|line| {
+            match line {
+                Line::Pair(k, _) => {
+                    if key == k {
+                        eprintln!("{}: Removed {}", path, k);
+                    }
+                    k != key
+                },
+                _ => true,
+            }
+        })
+    }
+
     pub fn has_value(&self, key: &str) -> bool {
         self.lines.iter().any(|p| match p {
             Line::Blank => false,
@@ -55,7 +69,7 @@ impl EnvFile {
     pub fn has_key(&self, key: &str) -> bool {
         self.lines.iter().any(|p| match p {
             Line::Blank => false,
-            Line::Pair(k, v) => k == key,
+            Line::Pair(k, _) => k == key,
             Line::Comment(_) => false,
         })
     }
@@ -79,14 +93,13 @@ impl EnvFile {
                 Line::Pair(k, existing_value) => {
                     if key == k {
                         if value == existing_value {
-                            eprintln!("Key {} already contains this value in {}", &key, self.path.display());
                             return
                         } else if value.is_empty() && !existing_value.is_empty() {
-                            eprintln!("Key {} already contains a value in {}", &key, self.path.display());
+                            eprintln!("{}: {} already exists", self.path.display(), key);
                             return
                         } else {
                             *line = Line::Pair(key.to_string(), value.to_string());
-                            eprintln!("Updated value for {} in {}", &key, self.path.display());
+                            eprintln!("{}: Updated {}={}", self.path.display(), key, value);
                             return
                         }
                     }
@@ -95,7 +108,7 @@ impl EnvFile {
             }
         }
         self.lines.push(Line::Pair(key.into(), value.into()));
-        eprintln!("Added key {}{} to {}", key, if value == "" { " with blank value" } else {""}, self.path.display());
+        eprintln!("{}: Added {}={}", self.path.display(), key, value);
     }
 
     pub fn save(&mut self) -> io::Result<()> {
@@ -118,7 +131,7 @@ impl EnvFile {
                 Line::Pair(key, _) => {
                     let value = self.lookup(&key);
                     if value.is_none() {
-                        eprintln!("Added key {} with blank value to {}", key, self.path.display());
+                        eprintln!("{}: Added {}={}", self.path.display(), key, "");
                     }
                     Line::Pair(key.to_string(), value.unwrap_or("".to_string()))
                 }
