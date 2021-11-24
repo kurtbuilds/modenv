@@ -8,7 +8,7 @@ use crate::file::envfile::{EnvFile, Line};
 use crate::exit_with;
 
 fn touch(path: &Path) -> io::Result<()> {
-    OpenOptions::new().create(true).write(true).open(path).map(|_| eprintln!("Touched {}", path.display()))
+    OpenOptions::new().create(true).write(true).open(path).map(|_| eprintln!("{}: Touched file", path.display()))
 }
 
 
@@ -18,23 +18,19 @@ fn append(path: &Path, data: &str) -> io::Result<()> {
         .open(path)
         .map(|mut file| {
             file.write(data.as_bytes());
-            eprintln!("Appended to {}", path.display())
+            eprintln!("{}: Added dotenv rules to gitignore.", path.display())
         })
 }
 
 fn find_gitignore() -> PathBuf {
     let mut cur = env::current_dir().unwrap();
-    println!("{}", cur.display());
     while cur.parent().is_some() {
         if cur.join(".gitignore").is_file() {
-            println!(".gitig file");
             return cur.join(".gitignore");
         } else if cur.join(".git").is_dir() {
-            println!(".git dir");
             return cur.join(".gitignore");
         } else {
             cur = cur.parent().unwrap().into();
-            println!("parent");
         }
     }
     PathBuf::from_str(".gitignore").unwrap()
