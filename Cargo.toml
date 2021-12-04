@@ -3,9 +3,23 @@ name = "modenv"
 version = "0.4.2"
 edition = "2018"
 authors = ["Kurt Wolf <kurtwolfbuilds@gmail.com>"]
-description = "A tool to easily manage .env files and keep them consistent."
+description = "CLI to easily manage .env files and keep them consistent."
 license = "MIT"
 repository = "https://github.com/kurtbuilds/modenv"
 
+# categories are https://crates.io/category_slugs
+categories = [
+    "development-tools",
+    "development-tools::build-utils",
+    "command-line-utilities",
+]
+
+keywords = [
+    "ci",
+    "env",
+    "dotenv",
+    "vars",
+]
+
 [dependencies]
-clap = { version = "3.0.0-beta.4", features = ["color", "env", "suggestions"]}
+clap = { version = "3.0.0-beta.5", features = ["color", "env", "suggestions"]}
