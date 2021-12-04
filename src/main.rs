@@ -121,7 +121,7 @@ fn resolve_pairs(sub_match: &ArgMatches) -> Vec<Pair> {
             let mut split = inp.splitn(2, "=");
             pairs.push(Pair { key: split.next().unwrap().into(), value: split.next().unwrap().into() });
         } else {
-            pairs.push(Pair { key: inp.into(), value: input.next().unwrap().into() });
+            pairs.push(Pair { key: inp.into(), value: input.next().unwrap_or("").into() });
         }
     }
     pairs
@@ -130,7 +130,7 @@ fn resolve_pairs(sub_match: &ArgMatches) -> Vec<Pair> {
 
 fn main() {
     let mut args = env::args_os().collect::<Vec<_>>();
-    if args.len() > 1 && !vec!["add", "check", "init"].contains(&args[1].to_str().unwrap()) {
+    if args.len() > 1 && !vec!["add", "check", "init", "rm"].contains(&args[1].to_str().unwrap()) {
         args.insert(1, "add".into())
     }
     let com_match = App::new("modenv")
@@ -182,7 +182,17 @@ fn main() {
                 .about("Update both the reference file and other env files to have the same ordering, set of keys, and comments.")
             )
             .about("Show missing keys.")
-        ).subcommand(App::new("init")
+        )
+        .subcommand(add_reference_file_args(App::new("rm"))
+            .arg(Arg::new("all")
+                .short('a')
+                .long("all")
+                .takes_value(false)
+            )
+            .arg(Arg::new("pairs").required(true).min_values(1))
+            .about("Remove key")
+        )
+        .subcommand(App::new("init")
             .about("Create .env, .env.example, and .env.production, and add .env to .gitignore.")
         )
         .get_matches_from(args.into_iter());
@@ -253,7 +263,6 @@ fn main() {
                     other_envfile.remove(&pair.key);
                 }
             }
-
         }
         _ => {
             exit_with("Unrecognized command.");

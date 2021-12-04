@@ -80,14 +80,14 @@ pub fn check(source_env: EnvFile, mut dest_envs: Vec<EnvFile>, force: bool) {
 
     let mut has_missing = false;
     for dest_env in &mut dest_envs {
-        let missing = missing_keys(&source_env,dest_env);
+        let missing = missing_keys(&source_env, dest_env);
         for key in missing {
             eprintln!("{}: {} is missing.", dest_env.path.display(), key);
             has_missing = true;
         }
     }
 
-    let mut all_missing : Vec<String> = Vec::new();
+    let mut all_missing: Vec<String> = Vec::new();
     for dest_env in &mut dest_envs {
         let missing = missing_keys(dest_env, &source_env);
         all_missing.extend(missing.iter().cloned());
@@ -95,17 +95,18 @@ pub fn check(source_env: EnvFile, mut dest_envs: Vec<EnvFile>, force: bool) {
     if !all_missing.is_empty() {
         all_missing.sort_unstable();
         all_missing.dedup();
-        eprintln!("WARNING: {}: {} are missing but exist in other env files. Run this command to keep those values
+        eprintln!("WARNING: {source}: {keys} {verb} missing but exist in other env files. Run this command to keep those values
 
-    modenv add {}
+    modenv add -e {source} {add_args}
 
 Or run this command to remove them from all files
 
-    modenv rm -a {}
-", source_env.path.display(),
-                  all_missing.join(", "),
-                  all_missing.join(" "),
-                  all_missing.join(" "));
+    modenv rm -a {del_args}
+", source = source_env.path.display(),
+                  keys = all_missing.join(", "),
+                  verb = if all_missing.len() == 1 { "is" } else { "are" },
+                  add_args = all_missing.iter().map(|s| format!("{}=", s)).collect::<Vec<_>>().join(" "),
+                  del_args = all_missing.join(" "));
         exit(1);
     }
 
@@ -115,6 +116,6 @@ Or run this command to remove them from all files
         }
         exit(0);
     } else {
-        exit(if has_missing { 1 } else {0});
+        exit(if has_missing { 1 } else { 0 });
     }
 }
