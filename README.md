@@ -18,7 +18,7 @@
 
 # Modenv
 
-`modenv` is a tool to update and keep consistent multiple .env files.
+`modenv` is a tool to update and keep consistent multiple `.env` files.
 It is designed with these objectives in mind:
 
 - **Simple and intuitive user experience.** `modenv` greatly prioritizes a minimal, intuitive user-interface, helpful error messages
@@ -35,21 +35,21 @@ It's easiest to understand the usage of `modenv` by following the lifecycle of a
 
     modenv init
 
-This command creates .env, env.example, and .env.production files, and adds .env* to your gitignore file 
-(allowing .env.example in git).
+This command creates `.env`, `env.example`, and `.env.production` files, and adds `.env*` to your `.gitignore` file 
+(still allowing `.env.example`).
 
 #### Add to the environment
 
     modenv -a PORT=3000 HOST=0.0.0.0
 
-This command adds PORT=5000 and HOST=0.0.0.0 to the first default env file found, typically `.env`.
-The -a flag causes it to add PORT and HOST with blank values to all other env files found.
-If the key already exists, this operation will fail unless -f is also passed.
+This command adds `PORT=5000` and `HOST=0.0.0.0` to the first default env file found, typically `.env`.
+The `-a` flag causes it to add `PORT` and `HOST` with blank values to all other env files found.
+If the key already exists, this operation will fail unless `-f` is also passed.
 The default env file is the first found of `.env.local`, `.env.development`, and `.env`.
 
 #### Add to the production environment
 
-Next, add values to .env.production (specified by -p):
+Next, add values to `.env.production` (specified by `-p`):
 
     modenv -p PORT=5000 HOST=0.0.0.0
 
