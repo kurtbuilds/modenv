@@ -133,7 +133,7 @@ fn main() {
     if args.len() > 1 && !vec!["add", "check", "init", "rm"].contains(&args[1].to_str().unwrap()) {
         args.insert(1, "add".into())
     }
-    let com_match = App::new("modenv")
+    let app = App::new("modenv")
         .version(VERSION)
         .about("Manage environment files and keep them consistent.
 
@@ -194,16 +194,21 @@ fn main() {
         )
         .subcommand(App::new("init")
             .about("Create .env, .env.example, and .env.production, and add .env to .gitignore.")
-        )
-        .get_matches_from(args.into_iter());
+        );
 
-    match com_match.subcommand().unwrap_or(("add", &com_match)) {
-        ("add", sub_match) => {
-            let force = sub_match.is_present("force");
-            let pairs = resolve_pairs(sub_match);
-            let reference_env_fpath = resolve_reference_file(sub_match);
+    #[cfg(feature="push")]
+    let app = app.subcommand(add_reference_file_args(App::new("push")
+        .arg(Arg::new("url"))));
 
-            let other_env_fpaths = if com_match.is_present("all") || sub_match.is_present("all") {
+    let matches = app.get_matches_from(args.into_iter());
+
+    match matches.subcommand().unwrap_or(("add", &matches)) {
+        ("add", matches) => {
+            let force = matches.is_present("force");
+            let pairs = resolve_pairs(matches);
+            let reference_env_fpath = resolve_reference_file(matches);
+
+            let other_env_fpaths = if matches.is_present("all") {
                 find_all_envfile_paths(&reference_env_fpath)
             } else {
                 vec![]
@@ -223,11 +228,11 @@ fn main() {
                 }
             }
         }
-        ("check", sub_match) => {
-            let force = sub_match.is_present("force");
-            let reference_env_fpath = resolve_reference_file(sub_match);
+        ("check", matches) => {
+            let force = matches.is_present("force");
+            let reference_env_fpath = resolve_reference_file(matches);
 
-            let other_env_fpaths = sub_match.values_of("files")
+            let other_env_fpaths = matches.values_of("files")
                 .map(|values|
                     values
                         .map(|value|
@@ -244,11 +249,11 @@ fn main() {
         ("init", _) => {
             command::init()
         }
-        ("rm", sub_match) => {
-            let pairs = resolve_pairs(sub_match);
-            let reference_env_fpath = resolve_reference_file(sub_match);
+        ("rm", matches) => {
+            let pairs = resolve_pairs(matches);
+            let reference_env_fpath = resolve_reference_file(matches);
 
-            let other_env_fpaths = if com_match.is_present("all") || sub_match.is_present("all") {
+            let other_env_fpaths = if matches.is_present("all") || matches.is_present("all") {
                 find_all_envfile_paths(&reference_env_fpath)
             } else {
                 vec![]
@@ -263,6 +268,13 @@ fn main() {
                     other_envfile.remove(&pair.key);
                 }
             }
+        }
+        #[cfg(feature="push")]
+        ("push", matches) => {
+            let url = matches.value_of("url").unwrap();
+            let reference_env_fpath = resolve_reference_file(matches);
+            let envfile = EnvFile::read(reference_env_fpath);
+            command::push(envfile, url)
         }
         _ => {
             exit_with("Unrecognized command.");
