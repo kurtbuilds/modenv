@@ -1,5 +1,4 @@
 use std::{fs, io};
-use std::iter::InPlaceIterable;
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
@@ -145,7 +144,7 @@ impl EnvFile {
 
 
 impl<'a> IntoIterator for &'a EnvFile {
-    type Item = (&'a str, &'a str);
+    type Item = (&'a String, &'a String);
     type IntoIter = EnvIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -169,7 +168,7 @@ impl<'a> Iterator for EnvIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         while self.env.lines.len() < self.i {
             let mut x = unsafe { self.env.lines.get_unchecked(self.i) };
-            self.i + 1;
+            self.i += 1;
             match x {
                 Line::Blank => {}
                 Line::Pair(k, v) => return Some((k, v)),

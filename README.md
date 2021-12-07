@@ -68,9 +68,21 @@ If you want to update files with blank values for missing keys:
 
 This command additionally will replicate comments and ordering from the reference file to the other files.
 
+#### Deployment
+
+Lastly, you can update the env for your deployment service. We assume PUT and a JSON body of env key/value pairs.
+
+    modenv -p push <url>
+
+This command requires the `push` feature flag.
+
 # Installation
 
     cargo install modenv
+
+If you'd like to send your environment as JSON key/value pairs, use:
+
+    cargo install modenv --features push
 
 # Contributing
 

@@ -130,7 +130,7 @@ fn resolve_pairs(sub_match: &ArgMatches) -> Vec<Pair> {
 
 fn main() {
     let mut args = env::args_os().collect::<Vec<_>>();
-    if args.len() > 1 && !vec!["add", "check", "init", "rm"].contains(&args[1].to_str().unwrap()) {
+    if args.len() > 1 && !vec!["add", "check", "init", "rm", "push"].contains(&args[1].to_str().unwrap()) {
         args.insert(1, "add".into())
     }
     let app = App::new("modenv")
@@ -198,7 +198,9 @@ fn main() {
 
     #[cfg(feature="push")]
     let app = app.subcommand(add_reference_file_args(App::new("push")
-        .arg(Arg::new("url"))));
+        .arg(Arg::new("url")
+            .about("Send the provided env file to the specified url as JSON key/value pairs..")
+            .required(true))));
 
     let matches = app.get_matches_from(args.into_iter());
 

@@ -127,7 +127,7 @@ pub fn push(env: EnvFile, dest: &str) {
     use serde_json;
 
     let mut map = HashMap::new();
-    for (k, v) in env {
+    for (k, v) in &env {
         map.insert(k, v);
     }
     reqwest::Client::new()
