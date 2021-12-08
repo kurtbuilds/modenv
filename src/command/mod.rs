@@ -83,7 +83,9 @@ pub fn check(source_env: EnvFile, mut dest_envs: Vec<EnvFile>, force: bool) {
     for dest_env in &mut dest_envs {
         let missing = missing_keys(&source_env, dest_env);
         for key in missing {
-            eprintln!("{}: {} is missing.", dest_env.path.display(), key);
+            if !force {
+                eprintln!("{}: {} is missing.", dest_env.path.display(), key);
+            }
             has_missing = true;
         }
     }
@@ -115,6 +117,8 @@ Or run this command to remove them from all files
         for dest_env in &mut dest_envs {
             dest_env.use_ordering_from(&source_env);
         }
+        // I think the exit is causing them not to save because we save on drop? Forcibly drop them Yay!
+        drop(dest_envs);
         exit(0);
     } else {
         exit(if has_missing { 1 } else { 0 });
