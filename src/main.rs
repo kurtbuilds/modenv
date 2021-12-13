@@ -245,13 +245,14 @@ Example:
     # .env.local
     # FOO=3
 
-    FOO=1 modenv run -e .env -e .env.local -- FOO=4 echo hi
+    FOO=1 modenv run -e .env,.env.local -- FOO=4 echo hi
 
 Will run with FOO=4, because it is the highest precedence.")
             .arg(Arg::new("env")
                 .short('e')
                 .long("env")
                 .value_name("FILE")
+                .use_delimiter(true)
                 .multiple_occurrences(true)
                 .help("Use FILE as the reference envfile.")
             )
