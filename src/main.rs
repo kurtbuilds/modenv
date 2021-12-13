@@ -228,7 +228,26 @@ changes.
             .about("Prints the pairs from an envfile. Can be used for export: $ export \"$(modenv show)\"")
         )
         .subcommand(add_single_reference_file_args(App::new("run"))
-            .about("Run a command with the environment variables set. Variables in the files override")
+            .about("Run a command with the environment variables set.")
+            .long_about("Run a command with the environment variables set.
+
+If the command has command line flags, you might need to use -- to separate the command from modenv flags.
+
+Precedence for the env var values flows from left to right
+, so lowest is existing env values, then env files from left to right,
+and highest is any passed in vars.
+
+Example:
+
+    # .env
+    # FOO=2
+
+    # .env.local
+    # FOO=3
+
+    FOO=1 modenv run -e .env -e .env.local -- FOO=4 echo hi
+
+Will run with FOO=4, because it is the highest precedence.")
             .arg(Arg::new("env")
                 .short('e')
                 .long("env")
@@ -236,16 +255,11 @@ changes.
                 .multiple_occurrences(true)
                 .help("Use FILE as the reference envfile.")
             )
-            .arg(Arg::new("vars")
-                .required(false)
-                .multiple_occurrences(true)
-                .help("Set an environment variable. Must be passed as KEY=VALUE.")
-            )
             .arg(Arg::new("command")
                 .required(true)
                 .min_values(1)
                 .multiple_occurrences(true)
-                .help("The command to run")
+                .help("The command to run. The command can be prefixed with variables in KEY=VALUE format.")
             )
         )
         ;
