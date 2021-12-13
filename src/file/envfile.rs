@@ -32,10 +32,18 @@ impl EnvFile {
                     } else if line.is_empty() {
                         Line::Blank
                     } else {
-                        let mut split = line.splitn(2, "=");
-                        let pair = (split.next().unwrap().into(), split.next().unwrap().into());
-                        // println!("DEBUG: {}={}", pair.0, pair.1);
-                        Line::Pair(pair.0, pair.1)
+                        let pair = line.splitn(2, "=").collect::<Vec<_>>();
+                        if pair[1].starts_with('"') {
+                            Line::Pair(
+                                pair[0].to_string(),
+                                pair[1][1..pair[1].len() - 1].to_string()
+                            )
+                        } else {
+                            Line::Pair(
+                                pair[0].to_string(),
+                                pair[1].to_string()
+                            )
+                        }
                     }
                 })
                 .collect(),
@@ -166,7 +174,7 @@ impl<'a> Iterator for EnvIter<'a> {
     type Item = (&'a String, &'a String);
 
     fn next(&mut self) -> Option<Self::Item> {
-        while self.env.lines.len() < self.i {
+        while self.i < self.env.lines.len() {
             let mut x = unsafe { self.env.lines.get_unchecked(self.i) };
             self.i += 1;
             match x {

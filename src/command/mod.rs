@@ -125,23 +125,9 @@ Or run this command to remove them from all files
     }
 }
 
-#[cfg(feature="push")]
-pub fn push(env: EnvFile, dest: &str) {
-    use reqwest::{blocking as reqwest};
-    use serde_json;
 
-    let mut map = HashMap::new();
-    for (k, v) in &env {
-        map.insert(k, v);
-    }
-    reqwest::Client::new()
-        .put(dest)
-        .header("Accept", "application/json")
-        .header("Content-Type", "application/json")
-        .body(serde_json::to_string(&map).unwrap())
-        .send()
-        .map(|mut res| {
-            println!("{}", res.text().unwrap());
-        })
-        .map_err(|e| eprintln!("Failed to create request: {}", e));
+pub fn show() {
+
 }
+
+pub fn run() {}

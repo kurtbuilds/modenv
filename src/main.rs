@@ -1,9 +1,12 @@
 use std::{env, fs};
+use std::borrow::Cow;
 use std::path::PathBuf;
-use std::process::exit;
+use std::process::{Command, exit};
 use std::str::FromStr;
+use atty::Stream;
 
 use clap::{App, AppSettings, Arg, ArgMatches, ArgSettings};
+use shell_escape::escape;
 
 use crate::command::missing_keys;
 use crate::file::{EnvFile, Pair};
@@ -11,7 +14,9 @@ use crate::file::{EnvFile, Pair};
 mod command;
 mod file;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
+const NAME: &str = env!("CARGO_PKG_NAME");
 
 fn exit_with(message: &str) -> ! {
     eprintln!("{}", message);
@@ -32,33 +37,38 @@ fn default_reference_envfile() -> PathBuf {
     exit_with("Could not find .env.local, .env.development, or .env file.")
 }
 
-fn add_reference_file_args(app: App) -> App {
+fn add_single_reference_file_args(app: App) -> App {
     app
         .arg(Arg::new("production")
             .short('p')
             .long("production")
-            .about("Use .env.production as the reference file.")
+            .help("Use .env.production as the reference file.")
         )
         .arg(Arg::new("development")
             .short('d')
             .long("development")
-            .about("Use .env.development as the reference file.")
+            .help("Use .env.development as the reference file.")
         )
         .arg(Arg::new("normal")
             .short('n')
             .long("normal")
-            .about("Use .env as the reference file.")
+            .help("Use .env as the reference file.")
         )
         .arg(Arg::new("example")
             .short('x')
             .long("example")
-            .about("Use .env.example.")
+            .help("Use .env.example.")
         )
+}
+
+
+fn add_reference_file_args(app: App) -> App {
+    add_single_reference_file_args(app)
         .arg(Arg::new("env")
             .short('e')
             .long("env")
             .value_name("FILE")
-            .about("Use FILE as the reference envfile.")
+            .help("Use FILE as the reference envfile.")
         )
 }
 
@@ -76,6 +86,23 @@ fn resolve_reference_file(sub_match: &ArgMatches) -> PathBuf {
     } else {
         default_reference_envfile()
     }
+}
+
+
+fn resolve_multiple_reference_files(sub_match: &ArgMatches) -> Vec<PathBuf> {
+    let mut reference_files = Vec::new();
+    if sub_match.is_present("production") {
+        reference_files.push(PathBuf::from_str(".env.production").unwrap());
+    } else if sub_match.is_present("development") {
+        reference_files.push(PathBuf::from_str(".env.development").unwrap());
+    } else if sub_match.is_present("normal") {
+        reference_files.push(PathBuf::from_str(".env").unwrap());
+    } else if sub_match.is_present("example") {
+        reference_files.push(PathBuf::from_str(".env.example").unwrap());
+    } else if let Some(env) = sub_match.values_of("env") {
+        reference_files.extend(env.into_iter().map(|s| PathBuf::from_str(s).unwrap()));
+    }
+    reference_files
 }
 
 
@@ -130,38 +157,53 @@ fn resolve_pairs(sub_match: &ArgMatches) -> Vec<Pair> {
 
 fn main() {
     let mut args = env::args_os().collect::<Vec<_>>();
-    if args.len() > 1 && !vec!["add", "check", "init", "rm", "push"].contains(&args[1].to_str().unwrap()) {
+    if args.len() > 1 && !vec![
+        "add",
+        "check",
+        "init",
+        "rm",
+        "show",
+        "run",
+        "--help",
+        "-h",
+        "--version",
+    ].contains(&args[1].to_str().unwrap()) {
         args.insert(1, "add".into())
     }
-    let app = App::new("modenv")
+    let app = App::new(NAME)
         .version(VERSION)
         .about("Manage environment files and keep them consistent.
 
-        If you do not provide a subcommand, modenv uses the add command.
+If you do not provide a subcommand, modenv uses the add command.
 
-        Example workflow:
+Example workflow:
 
-            modenv init
+1. Create the .env files.
 
-            # Add KEY=VALUE to .env. -a adds the KEY, but not the value, to all other .env files.
-            # The add command is assumed if no subcommand is provided, so it is optional.
+    modenv init
 
-            modenv -a KEY=VALUE
-            modenv add -a KEY=VALUE
+2. Add KEY=VALUE to .env. -a adds the KEY, but not the value, to all other .env files.
+The add command is assumed if no subcommand is provided, so it is optional.
 
-            # Once you have the production value, add KEY=PROD_VALUE to .env.production.
-            modenv -p KEY=PROD_VALUE
+    modenv -a KEY=VALUE
+    modenv add -a KEY=VALUE
 
-            # Check keys in other envfiles based on .env. This is a dry-run. Use -f to perform
-            # changes.
-            modenv check")
+3. Once you have the production value, add KEY=PROD_VALUE to .env.production.
+
+    modenv -p KEY=PROD_VALUE
+
+4. Check keys in other envfiles based on .env. This is a dry-run. Use -f to perform
+changes.
+
+    modenv check")
         .setting(AppSettings::ArgRequiredElseHelp)
         .subcommand(add_reference_file_args(App::new("add"))
+            .about("Add key/value pair(s) to an envfile.")
             .arg(Arg::new("force")
                 .short('f')
                 .long("force")
                 .takes_value(false)
-                .about("Overwrite key value if it already exists.")
+                .help("Overwrite key value if it already exists.")
             )
             .arg(Arg::new("all")
                 .short('a')
@@ -169,19 +211,18 @@ fn main() {
                 .takes_value(false)
             )
             .arg(Arg::new("pairs").required(true).min_values(1))
-            .about("Add environment variable. Can be passed as KEY=VALUE or as two args, KEY VALUE.")
         )
         .subcommand(add_reference_file_args(App::new("check"))
+            .about("Check envfiles for inconsistencies.")
             .arg(Arg::new("FILES")
                 .min_values(0)
-                .about("By default, modenv scans all env files. If you specify FILES, it only checks those files.")
+                .help("By default, modenv scans all env files. If you specify FILES, it only checks those files.")
             )
             .arg(Arg::new("force")
                 .short('f')
                 .long("force")
-                .about("Update both the reference file and other env files to have the same ordering, set of keys, and comments.")
+                .help("Update both the reference file and other env files to have the same ordering, set of keys, and comments.")
             )
-            .about("Show missing keys.")
         )
         .subcommand(add_reference_file_args(App::new("rm"))
             .arg(Arg::new("all")
@@ -190,17 +231,36 @@ fn main() {
                 .takes_value(false)
             )
             .arg(Arg::new("pairs").required(true).min_values(1))
-            .about("Remove key")
+            .about("Remove key(s) from an envfile.")
         )
         .subcommand(App::new("init")
             .about("Create .env, .env.example, and .env.production, and add .env to .gitignore.")
-        );
-
-    #[cfg(feature="push")]
-    let app = app.subcommand(add_reference_file_args(App::new("push")
-        .arg(Arg::new("url")
-            .about("Send the provided env file to the specified url as JSON key/value pairs..")
-            .required(true))));
+        )
+        .subcommand(add_single_reference_file_args(App::new("show"))
+            .about("Prints the pairs from an envfile. Can be used for export: $ export \"$(modenv show)\"")
+        )
+        .subcommand(add_single_reference_file_args(App::new("run"))
+            .about("Run a command with the environment variables set. Variables in the files override")
+            .arg(Arg::new("env")
+                .short('e')
+                .long("env")
+                .value_name("FILE")
+                .multiple_occurrences(true)
+                .help("Use FILE as the reference envfile.")
+            )
+            .arg(Arg::new("vars")
+                .required(false)
+                .multiple_occurrences(true)
+                .help("Set an environment variable. Must be passed as KEY=VALUE.")
+            )
+            .arg(Arg::new("command")
+                .required(true)
+                .min_values(1)
+                .multiple_occurrences(true)
+                .help("The command to run")
+            )
+        )
+        ;
 
     let matches = app.get_matches_from(args.into_iter());
 
@@ -271,12 +331,33 @@ fn main() {
                 }
             }
         }
-        #[cfg(feature="push")]
-        ("push", matches) => {
-            let url = matches.value_of("url").unwrap();
+        ("show", matches) => {
             let reference_env_fpath = resolve_reference_file(matches);
-            let envfile = EnvFile::read(reference_env_fpath);
-            command::push(envfile, url)
+            let mut envfile = EnvFile::read(reference_env_fpath);
+            for (key, value) in &envfile {
+                println!("{}={}", key, escape(Cow::from(value)));
+            }
+        }
+        ("run", matches) => {
+            let paths = resolve_multiple_reference_files(matches);
+            for path in paths {
+                let envfile = EnvFile::read(path);
+                for (key, value) in &envfile {
+                    env::set_var(key, value);
+                }
+            }
+            let mut command = matches.values_of("command").unwrap();
+            let mut maybe_command = command.next().expect("No command provided");
+            while maybe_command.contains("=") {
+                let pair = maybe_command.splitn(2, '=').collect::<Vec<_>>();
+                env::set_var(pair[0], pair[1]);
+                maybe_command = command.next().expect("No command provided");
+            }
+            exit(Command::new(maybe_command)
+                .args(command)
+                .status()
+                .expect("Failed to execute command")
+                .code().unwrap())
         }
         _ => {
             exit_with("Unrecognized command.");
