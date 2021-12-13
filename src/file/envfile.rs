@@ -24,15 +24,15 @@ impl EnvFile {
         let s = fs::read_to_string(&path).unwrap();
         // println!("DEBUG: {}", path.display());
         EnvFile {
-            lines: s.split("\n")
+            lines: s.split('\n')
                 .map(|line| {
                     let line = line.trim();
-                    if line.starts_with("#") {
+                    if line.starts_with('#') {
                         Line::Comment(line.into())
                     } else if line.is_empty() {
                         Line::Blank
                     } else {
-                        let pair = line.splitn(2, "=").collect::<Vec<_>>();
+                        let pair = line.splitn(2, '=').collect::<Vec<_>>();
                         if pair[1].starts_with('"') {
                             Line::Pair(
                                 pair[0].to_string(),
@@ -137,9 +137,9 @@ impl EnvFile {
             .map(|line| match line {
                 Line::Blank => Line::Blank,
                 Line::Pair(key, _) => {
-                    let value = self.lookup(&key);
+                    let value = self.lookup(key);
                     if value.is_none() {
-                        eprintln!("{}: Added {}={}", self.path.display(), key, "");
+                        eprintln!("{}: Added {}=", self.path.display(), key);
                     }
                     Line::Pair(key.to_string(), value.unwrap_or("".to_string()))
                 }
@@ -175,7 +175,7 @@ impl<'a> Iterator for EnvIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         while self.i < self.env.lines.len() {
-            let mut x = unsafe { self.env.lines.get_unchecked(self.i) };
+            let x = unsafe { self.env.lines.get_unchecked(self.i) };
             self.i += 1;
             match x {
                 Line::Blank => {}

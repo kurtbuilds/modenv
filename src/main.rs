@@ -3,19 +3,18 @@ use std::borrow::Cow;
 use std::path::PathBuf;
 use std::process::{Command, exit};
 use std::str::FromStr;
-use atty::Stream;
 
-use clap::{App, AppSettings, Arg, ArgMatches, ArgSettings};
+
+use clap::{App, AppSettings, Arg, ArgMatches};
 use shell_escape::escape;
 
-use crate::command::missing_keys;
+
 use crate::file::{EnvFile, Pair};
 
 mod command;
 mod file;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 const NAME: &str = env!("CARGO_PKG_NAME");
 
 fn exit_with(message: &str) -> ! {
@@ -24,11 +23,9 @@ fn exit_with(message: &str) -> ! {
 }
 
 fn default_reference_envfile() -> PathBuf {
-    for path in vec![
-        ".env.local",
+    for path in &[".env.local",
         ".env.development",
-        ".env",
-    ] {
+        ".env"] {
         let p = PathBuf::from_str(path).unwrap();
         if p.exists() {
             return p;
@@ -129,23 +126,14 @@ fn quit_if_value_exists(pairs: &Vec<Pair>, envfile: &EnvFile, other_envfiles: &V
     }
 }
 
-fn choose_default_envfile(files: &Vec<PathBuf>) -> PathBuf {
-    let example_envfile = PathBuf::from_str(".env.example").unwrap();
-    if files.contains(&example_envfile) {
-        default_reference_envfile()
-    } else {
-        example_envfile
-    }
-}
-
 
 fn resolve_pairs(sub_match: &ArgMatches) -> Vec<Pair> {
     let mut input = sub_match.values_of("pairs").unwrap().peekable();
     let mut pairs = Vec::new();
     while input.peek().is_some() {
         let inp = input.next().unwrap();
-        if inp.contains("=") {
-            let mut split = inp.splitn(2, "=");
+        if inp.contains('=') {
+            let mut split = inp.splitn(2, '=');
             pairs.push(Pair { key: split.next().unwrap().into(), value: split.next().unwrap().into() });
         } else {
             pairs.push(Pair { key: inp.into(), value: input.next().unwrap_or("").into() });
@@ -333,7 +321,7 @@ changes.
         }
         ("show", matches) => {
             let reference_env_fpath = resolve_reference_file(matches);
-            let mut envfile = EnvFile::read(reference_env_fpath);
+            let envfile = EnvFile::read(reference_env_fpath);
             for (key, value) in &envfile {
                 println!("{}={}", key, escape(Cow::from(value)));
             }
@@ -348,7 +336,7 @@ changes.
             }
             let mut command = matches.values_of("command").unwrap();
             let mut maybe_command = command.next().expect("No command provided");
-            while maybe_command.contains("=") {
+            while maybe_command.contains('=') {
                 let pair = maybe_command.splitn(2, '=').collect::<Vec<_>>();
                 env::set_var(pair[0], pair[1]);
                 maybe_command = command.next().expect("No command provided");

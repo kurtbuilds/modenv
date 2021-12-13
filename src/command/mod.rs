@@ -1,25 +1,26 @@
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
-use std::collections::HashMap;
+
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::process::exit;
 use std::str::FromStr;
 use crate::file::envfile::{EnvFile, Line};
-use crate::exit_with;
+
 
 fn touch(path: &Path) -> io::Result<()> {
     OpenOptions::new().create(true).write(true).open(path).map(|_| eprintln!("{}: Touched file", path.display()))
 }
 
 
-fn append(path: &Path, data: &str) -> io::Result<()> {
+fn append(path: &Path, data: &str) -> io::Result<usize> {
     OpenOptions::new()
         .append(true)
         .open(path)
-        .map(|mut file| {
-            file.write(data.as_bytes());
-            eprintln!("{}: Added dotenv rules to gitignore.", path.display())
+        .and_then(|mut file| {
+            let r = file.write(data.as_bytes());
+            eprintln!("{}: Added dotenv rules to gitignore.", path.display());
+            r
         })
 }
 
@@ -44,16 +45,16 @@ pub fn init() {
 ").unwrap();
 
     if fs::metadata(Path::new(".env.example")).is_ok() {
-        touch(&Path::new(".env")).unwrap();
-        touch(&Path::new(".env.production")).unwrap();
+        touch(Path::new(".env")).unwrap();
+        touch(Path::new(".env.production")).unwrap();
         check(EnvFile::read(PathBuf::from(".env.example")), vec![
             EnvFile::read(PathBuf::from(".env")),
             EnvFile::read(PathBuf::from(".env.production")),
         ], true);
     } else {
-        touch(&Path::new(".env")).unwrap();
-        touch(&Path::new(".env.example")).unwrap();
-        touch(&Path::new(".env.production")).unwrap();
+        touch(Path::new(".env")).unwrap();
+        touch(Path::new(".env.example")).unwrap();
+        touch(Path::new(".env.production")).unwrap();
     }
 }
 
@@ -70,7 +71,7 @@ pub fn missing_keys(source_env: &EnvFile, dest_env: &EnvFile) -> Vec<String> {
                 missing.push(key.to_string());
             }
         });
-    return missing;
+    missing
 }
 
 pub fn check(source_env: EnvFile, mut dest_envs: Vec<EnvFile>, force: bool) {
@@ -124,10 +125,3 @@ Or run this command to remove them from all files
         exit(if has_missing { 1 } else { 0 });
     }
 }
-
-
-pub fn show() {
-
-}
-
-pub fn run() {}

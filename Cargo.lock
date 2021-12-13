@@ -397,7 +397,6 @@ dependencies = [
 name = "modenv"
 version = "0.5.0"
 dependencies = [
- "atty",
  "clap",
  "reqwest",
  "serde",
