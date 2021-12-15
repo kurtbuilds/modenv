@@ -7,6 +7,7 @@ pub struct Pair {
     pub(crate) value: String,
 }
 
+#[derive(Clone, Debug)]
 pub enum Line {
     Blank,
     Pair(String, String),
@@ -132,13 +133,13 @@ impl EnvFile {
         )
     }
 
-    pub fn use_ordering_from(&mut self, envfile: &EnvFile) {
+    pub fn use_ordering_from(&mut self, envfile: &EnvFile, quiet: bool) {
         let newlines = envfile.lines.iter()
             .map(|line| match line {
                 Line::Blank => Line::Blank,
                 Line::Pair(key, _) => {
                     let value = self.lookup(key);
-                    if value.is_none() {
+                    if value.is_none() && !quiet {
                         eprintln!("{}: Added {}=", self.path.display(), key);
                     }
                     Line::Pair(key.to_string(), value.unwrap_or("".to_string()))

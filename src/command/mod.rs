@@ -45,12 +45,17 @@ pub fn init() {
 ").unwrap();
 
     if fs::metadata(Path::new(".env.example")).is_ok() {
-        touch(Path::new(".env")).unwrap();
+        let example = EnvFile::read(PathBuf::from(".env.example"));
+        let env = EnvFile {
+            lines: example.lines.clone(),
+            path: PathBuf::from(".env")
+        };
+        // causes save
+        drop(env);
         touch(Path::new(".env.production")).unwrap();
         check(EnvFile::read(PathBuf::from(".env.example")), vec![
-            EnvFile::read(PathBuf::from(".env")),
             EnvFile::read(PathBuf::from(".env.production")),
-        ], true);
+        ], CheckOptions{ force: true, quiet: true });
     } else {
         touch(Path::new(".env")).unwrap();
         touch(Path::new(".env.example")).unwrap();
@@ -74,17 +79,24 @@ pub fn missing_keys(source_env: &EnvFile, dest_env: &EnvFile) -> Vec<String> {
     missing
 }
 
-pub fn check(source_env: EnvFile, mut dest_envs: Vec<EnvFile>, force: bool) {
-    eprintln!("Using {} as the reference, checking files: {}",
-              source_env.path.display(),
-              dest_envs.iter().map(|e| e.path.display().to_string()).collect::<Vec<String>>().join(" ")
-    );
+pub struct CheckOptions {
+    pub quiet: bool,
+    pub force: bool,
+}
+
+pub fn check(source_env: EnvFile, mut dest_envs: Vec<EnvFile>, opts: CheckOptions) {
+    if !opts.quiet {
+        eprintln!("Using {} as the reference, checking files: {}",
+                  source_env.path.display(),
+                  dest_envs.iter().map(|e| e.path.display().to_string()).collect::<Vec<String>>().join(" ")
+        );
+    }
 
     let mut has_missing = false;
     for dest_env in &mut dest_envs {
         let missing = missing_keys(&source_env, dest_env);
         for key in missing {
-            if !force {
+            if !opts.force {
                 eprintln!("{}: {} is missing.", dest_env.path.display(), key);
             }
             has_missing = true;
@@ -114,9 +126,9 @@ Or run this command to remove them from all files
         exit(1);
     }
 
-    if force {
+    if opts.force {
         for dest_env in &mut dest_envs {
-            dest_env.use_ordering_from(&source_env);
+            dest_env.use_ordering_from(&source_env, opts.quiet);
         }
         // I think the exit is causing them not to save because we save on drop? Forcibly drop them Yay!
         drop(dest_envs);

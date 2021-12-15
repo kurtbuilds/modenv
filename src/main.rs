@@ -7,6 +7,7 @@ use std::str::FromStr;
 
 use clap::{App, AppSettings, Arg, ArgMatches};
 use shell_escape::escape;
+use crate::command::CheckOptions;
 
 
 use crate::file::{EnvFile, Pair};
@@ -309,7 +310,10 @@ Will run with FOO=4, because it is the highest precedence.")
 
             let source_env = EnvFile::read(reference_env_fpath);
             let dest_envs = other_env_fpaths.into_iter().map(EnvFile::read).collect::<Vec<EnvFile>>();
-            command::check(source_env, dest_envs, force);
+            command::check(source_env, dest_envs, CheckOptions{
+                force,
+                quiet: false,
+            });
         }
         ("init", _) => {
             command::init()
