@@ -342,7 +342,7 @@ Will run with FOO=4, because it is the highest precedence.")
             let reference_env_fpath = resolve_reference_file(matches);
             let envfile = EnvFile::read(reference_env_fpath);
             for (key, value) in &envfile {
-                println!("{}={}", key, escape(Cow::from(value)));
+                println!("{}={}", key, value));
             }
         }
         ("run", matches) => {
