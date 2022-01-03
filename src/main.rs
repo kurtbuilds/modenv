@@ -1,12 +1,10 @@
 use std::{env, fs};
-use std::borrow::Cow;
 use std::path::PathBuf;
 use std::process::{Command, exit};
 use std::str::FromStr;
 
 
 use clap::{App, AppSettings, Arg, ArgMatches};
-use shell_escape::escape;
 use crate::command::CheckOptions;
 
 
@@ -342,7 +340,7 @@ Will run with FOO=4, because it is the highest precedence.")
             let reference_env_fpath = resolve_reference_file(matches);
             let envfile = EnvFile::read(reference_env_fpath);
             for (key, value) in &envfile {
-                println!("{}={}", key, value));
+                println!("{}={}", key, value);
             }
         }
         ("run", matches) => {
