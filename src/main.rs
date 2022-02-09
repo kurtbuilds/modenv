@@ -1,5 +1,5 @@
 use std::{env, fs};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, exit};
 use std::str::FromStr;
 
@@ -227,8 +227,8 @@ changes.
             .about("Prints the pairs from an envfile. Can be used for export: $ export \"$(modenv show)\"")
         )
         .subcommand(add_single_reference_file_args(App::new("run"))
-            .about("Run a command with the environment variables set.")
-            .long_about("Run a command with the environment variables set.
+            .about("Run a command with the environment variables set. If a envfile is not provided, defaults to .env.")
+            .long_about("Run a command with the environment variables set. If a envfile is not provided, defaults to .env.
 
 If the command has command line flags, you might need to use -- to separate the command from modenv flags.
 
@@ -344,7 +344,10 @@ Will run with FOO=4, because it is the highest precedence.")
             }
         }
         ("run", matches) => {
-            let paths = resolve_multiple_reference_files(matches);
+            let mut paths = resolve_multiple_reference_files(matches);
+            if paths.is_empty() && Path::new(".env").exists() {
+                paths.push(PathBuf::from(".env"));
+            }
             for path in paths {
                 let envfile = EnvFile::read(path);
                 for (key, value) in &envfile {
