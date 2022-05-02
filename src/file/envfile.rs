@@ -20,6 +20,13 @@ pub struct EnvFile {
     pub(crate) path: PathBuf,
 }
 
+fn escape(val: &str) -> String {
+    if val.contains(' ') {
+        format!("\"{}\"", val)
+    } else {
+        val.to_string()
+    }
+}
 
 impl EnvFile {
     pub fn read(path: PathBuf) -> Self {
@@ -128,7 +135,7 @@ impl EnvFile {
             .iter()
             .map(|line| match line {
                 Line::Blank => String::new(),
-                Line::Pair(key, value) => format!("{}={}", key, value),
+                Line::Pair(key, value) => format!("{}={}", key, escape(value)),
                 Line::Comment(line) => line.to_string(),
             })
             .collect::<Vec<String>>()
