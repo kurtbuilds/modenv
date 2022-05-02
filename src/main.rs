@@ -200,7 +200,7 @@ changes.
         )
         .subcommand(add_reference_file_args(Command::new("check"))
             .about("Check envfiles for inconsistencies.")
-            .arg(Arg::new("FILES")
+            .arg(Arg::new("files")
                 .min_values(0)
                 .help("By default, modenv scans all env files. If you specify FILES, it only checks those files.")
             )
