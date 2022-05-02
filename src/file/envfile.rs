@@ -15,6 +15,7 @@ pub enum Line {
 }
 
 pub struct EnvFile {
+    pub(crate) modified: bool,
     pub(crate) lines: Vec<Line>,
     pub(crate) path: PathBuf,
 }
@@ -23,8 +24,8 @@ pub struct EnvFile {
 impl EnvFile {
     pub fn read(path: PathBuf) -> Self {
         let s = fs::read_to_string(&path).unwrap();
-        // println!("DEBUG: {}", path.display());
         EnvFile {
+            modified: false,
             lines: s.split('\n')
                 .map(|line| {
                     let line = line.trim();
@@ -64,7 +65,8 @@ impl EnvFile {
                 },
                 _ => true,
             }
-        })
+        });
+        self.modified = true;
     }
 
     pub fn has_value(&self, key: &str) -> bool {
@@ -118,6 +120,7 @@ impl EnvFile {
         }
         self.lines.push(Line::Pair(key.into(), value.into()));
         eprintln!("{}: Added {}={}", self.path.display(), key, value);
+        self.modified = true;
     }
 
     pub fn save(&mut self) -> io::Result<()> {
@@ -148,6 +151,7 @@ impl EnvFile {
             })
             .collect();
         self.lines = newlines;
+        self.modified = true;
     }
 }
 
@@ -191,6 +195,8 @@ impl<'a> Iterator for EnvIter<'a> {
 
 impl Drop for EnvFile {
     fn drop(&mut self) {
-        self.save().unwrap()
+        if self.modified {
+            self.save().unwrap()
+        }
     }
 }

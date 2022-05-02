@@ -47,6 +47,7 @@ pub fn init() {
     if fs::metadata(Path::new(".env.example")).is_ok() {
         let example = EnvFile::read(PathBuf::from(".env.example"));
         let env = EnvFile {
+            modified: false,
             lines: example.lines.clone(),
             path: PathBuf::from(".env")
         };

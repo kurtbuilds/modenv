@@ -1,13 +1,12 @@
 use std::{env, fs};
 use std::path::{Path, PathBuf};
-use std::process::{Command, exit};
+use std::process::exit;
+use std::process;
 use std::str::FromStr;
 
+use clap::{Arg, ArgMatches, Command};
 
-use clap::{App, AppSettings, Arg, ArgMatches};
 use crate::command::CheckOptions;
-
-
 use crate::file::{EnvFile, Pair};
 
 mod command;
@@ -33,7 +32,7 @@ fn default_reference_envfile() -> PathBuf {
     exit_with("Could not find .env.local, .env.development, or .env file.")
 }
 
-fn add_single_reference_file_args(app: App) -> App {
+fn add_single_reference_file_args(app: Command) -> Command {
     app
         .arg(Arg::new("production")
             .short('p')
@@ -58,7 +57,7 @@ fn add_single_reference_file_args(app: App) -> App {
 }
 
 
-fn add_reference_file_args(app: App) -> App {
+fn add_reference_file_args(app: Command) -> Command {
     add_single_reference_file_args(app)
         .arg(Arg::new("env")
             .short('e')
@@ -157,7 +156,7 @@ fn main() {
     ].contains(&args[1].to_str().unwrap()) {
         args.insert(1, "add".into())
     }
-    let app = App::new(NAME)
+    let app = Command::new(NAME)
         .version(VERSION)
         .about("Manage environment files and keep them consistent.
 
@@ -183,8 +182,8 @@ The add command is assumed if no subcommand is provided, so it is optional.
 changes.
 
     modenv check")
-        .setting(AppSettings::ArgRequiredElseHelp)
-        .subcommand(add_reference_file_args(App::new("add"))
+        .arg_required_else_help(true)
+        .subcommand(add_reference_file_args(Command::new("add"))
             .about("Add key/value pair(s) to an envfile.")
             .arg(Arg::new("force")
                 .short('f')
@@ -199,7 +198,7 @@ changes.
             )
             .arg(Arg::new("pairs").required(true).min_values(1))
         )
-        .subcommand(add_reference_file_args(App::new("check"))
+        .subcommand(add_reference_file_args(Command::new("check"))
             .about("Check envfiles for inconsistencies.")
             .arg(Arg::new("FILES")
                 .min_values(0)
@@ -211,22 +210,22 @@ changes.
                 .help("Update both the reference file and other env files to have the same ordering, set of keys, and comments.")
             )
         )
-        .subcommand(add_reference_file_args(App::new("rm"))
+        .subcommand(add_reference_file_args(Command::new("rm"))
             .arg(Arg::new("all")
                 .short('a')
                 .long("all")
                 .takes_value(false)
             )
             .arg(Arg::new("pairs").required(true).min_values(1))
-            .about("Remove key(s) from an envfile.")
+            .after_help("Remove key(s) from an envfile.")
         )
-        .subcommand(App::new("init")
+        .subcommand(Command::new("init")
             .about("Create .env, .env.example, and .env.production, and add .env to .gitignore.")
         )
-        .subcommand(add_single_reference_file_args(App::new("show"))
+        .subcommand(add_single_reference_file_args(Command::new("show"))
             .about("Prints the pairs from an envfile. Can be used for export: $ export \"$(modenv show)\"")
         )
-        .subcommand(add_single_reference_file_args(App::new("run"))
+        .subcommand(add_single_reference_file_args(Command::new("run"))
             .about("Run a command with the environment variables set. If a envfile is not provided, defaults to .env.")
             .long_about("Run a command with the environment variables set. If a envfile is not provided, defaults to .env.
 
@@ -251,7 +250,7 @@ Will run with FOO=4, because it is the highest precedence.")
                 .short('e')
                 .long("env")
                 .value_name("FILE")
-                .use_delimiter(true)
+                .use_value_delimiter(true)
                 .multiple_occurrences(true)
                 .help("Use FILE as the reference envfile.")
             )
@@ -262,9 +261,16 @@ Will run with FOO=4, because it is the highest precedence.")
                 .help("The command to run. The command can be prefixed with variables in KEY=VALUE format.")
             )
         )
+        .arg(Arg::new("verbose")
+            .short('v')
+            .long("verbose")
+            .global(true)
+            .takes_value(false)
+        )
         ;
 
     let matches = app.get_matches_from(args.into_iter());
+    let verbose = matches.is_present("verbose");
 
     match matches.subcommand().unwrap_or(("add", &matches)) {
         ("add", matches) => {
@@ -308,7 +314,7 @@ Will run with FOO=4, because it is the highest precedence.")
 
             let source_env = EnvFile::read(reference_env_fpath);
             let dest_envs = other_env_fpaths.into_iter().map(EnvFile::read).collect::<Vec<EnvFile>>();
-            command::check(source_env, dest_envs, CheckOptions{
+            command::check(source_env, dest_envs, CheckOptions {
                 force,
                 quiet: false,
             });
@@ -361,7 +367,13 @@ Will run with FOO=4, because it is the highest precedence.")
                 env::set_var(pair[0], pair[1]);
                 maybe_command = command.next().expect("No command provided");
             }
-            exit(Command::new(maybe_command)
+            if verbose {
+                for (key, value) in env::vars() {
+                    println!("{}={}", key, value);
+                }
+                println!("{} {}", maybe_command, command.clone().collect::<Vec<_>>().join(" "));
+            }
+            exit(process::Command::new(maybe_command)
                 .args(command)
                 .status()
                 .expect("Failed to execute command")
