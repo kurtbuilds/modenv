@@ -45,12 +45,12 @@ impl EnvFile {
                         if pair[1].starts_with('"') {
                             Line::Pair(
                                 pair[0].to_string(),
-                                pair[1][1..pair[1].len() - 1].to_string()
+                                pair[1][1..pair[1].len() - 1].to_string(),
                             )
                         } else {
                             Line::Pair(
                                 pair[0].to_string(),
-                                pair[1].to_string()
+                                pair[1].to_string(),
                             )
                         }
                     }
@@ -69,7 +69,7 @@ impl EnvFile {
                         eprintln!("{}: Removed {}", path, k);
                     }
                     k != key
-                },
+                }
                 _ => true,
             }
         });
@@ -105,28 +105,31 @@ impl EnvFile {
     }
 
     pub fn add(&mut self, key: &str, value: &str) {
+        let mut found = false;
         for line in &mut self.lines {
             match line {
                 Line::Blank => {}
                 Line::Pair(k, existing_value) => {
                     if key == k {
                         if value == existing_value {
-                            return
+                            return;
                         } else if value.is_empty() && !existing_value.is_empty() {
                             eprintln!("{}: {} already exists", self.path.display(), key);
-                            return
+                            return;
                         } else {
+                            eprintln!("{}: Updated {}={} . Value was {:?}", self.path.display(), key, value, existing_value.clone());
                             *line = Line::Pair(key.to_string(), value.to_string());
-                            eprintln!("{}: Updated {}={}", self.path.display(), key, value);
-                            return
+                            found = true;
                         }
                     }
                 }
                 Line::Comment(_) => {}
             }
         }
-        self.lines.push(Line::Pair(key.into(), value.into()));
-        eprintln!("{}: Added {}={}", self.path.display(), key, value);
+        if !found {
+            self.lines.push(Line::Pair(key.into(), value.into()));
+            eprintln!("{}: Added {}={}", self.path.display(), key, value);
+        }
         self.modified = true;
     }
 
@@ -139,7 +142,7 @@ impl EnvFile {
                 Line::Comment(line) => line.to_string(),
             })
             .collect::<Vec<String>>()
-            .join("\n")
+            .join("\n"),
         )
     }
 

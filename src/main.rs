@@ -142,20 +142,6 @@ fn resolve_pairs(sub_match: &ArgMatches) -> Vec<Pair> {
 
 
 fn main() {
-    let mut args = env::args_os().collect::<Vec<_>>();
-    if args.len() > 1 && !vec![
-        "add",
-        "check",
-        "init",
-        "rm",
-        "show",
-        "run",
-        "--help",
-        "-h",
-        "--version",
-    ].contains(&args[1].to_str().unwrap()) {
-        args.insert(1, "add".into())
-    }
     let app = Command::new(NAME)
         .version(VERSION)
         .about("Manage environment files and keep them consistent.
@@ -269,7 +255,7 @@ Will run with FOO=4, because it is the highest precedence.")
         )
         ;
 
-    let matches = app.get_matches_from(args.into_iter());
+    let matches = app.get_matches();
     let verbose = matches.is_present("verbose");
 
     match matches.subcommand().unwrap_or(("add", &matches)) {
