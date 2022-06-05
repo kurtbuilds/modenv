@@ -212,8 +212,8 @@ changes.
             .about("Prints the pairs from an envfile. Can be used for export: $ export \"$(modenv show)\"")
         )
         .subcommand(add_single_reference_file_args(Command::new("run"))
-            .about("Run a command with the environment variables set. If a envfile is not provided, defaults to .env.")
-            .long_about("Run a command with the environment variables set. If a envfile is not provided, defaults to .env.
+            .about("Run a command with the environment variables set. If a envfile is not provided, defaults to .env. Run `modenv run -h` for information on variable priority.")
+            .after_help("Run a command with the environment variables set. If a envfile is not provided, defaults to .env.
 
 If the command has command line flags, you might need to use -- to separate the command from modenv flags.
 
@@ -255,7 +255,11 @@ Will run with FOO=4, because it is the highest precedence.")
         )
         ;
 
-    let matches = app.get_matches();
+    let matches = app.clone().try_get_matches().unwrap_or_else(|_| {
+        let mut args = env::args().collect::<Vec<_>>();
+        args.insert(1, "add".into());
+        app.get_matches_from(args)
+    });
     let verbose = matches.is_present("verbose");
 
     match matches.subcommand().unwrap_or(("add", &matches)) {

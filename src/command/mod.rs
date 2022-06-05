@@ -39,24 +39,29 @@ fn find_gitignore() -> PathBuf {
 }
 
 pub fn init() {
-    append(&find_gitignore(), "
+    let gitignore_path = find_gitignore();
+    let gitignore_content = fs::read_to_string(&gitignore_path).unwrap();
+    if gitignore_content.contains(".env") {
+        eprintln!("{}: .gitignore already contains dotenv rules. Skipping addition of rules.", gitignore_path.display());
+    } else {
+        append(&find_gitignore(), "
 .env*
 !.env.example
 ").unwrap();
+    }
 
     if fs::metadata(Path::new(".env.example")).is_ok() {
         let example = EnvFile::read(PathBuf::from(".env.example"));
         let env = EnvFile {
             modified: false,
             lines: example.lines.clone(),
-            path: PathBuf::from(".env")
+            path: PathBuf::from(".env"),
         };
-        // causes save
-        drop(env);
+        env.save().unwrap();
         touch(Path::new(".env.production")).unwrap();
         check(EnvFile::read(PathBuf::from(".env.example")), vec![
             EnvFile::read(PathBuf::from(".env.production")),
-        ], CheckOptions{ force: true, quiet: true });
+        ], CheckOptions { force: true, quiet: true });
     } else {
         touch(Path::new(".env")).unwrap();
         touch(Path::new(".env.example")).unwrap();

@@ -133,7 +133,7 @@ impl EnvFile {
         self.modified = true;
     }
 
-    pub fn save(&mut self) -> io::Result<()> {
+    pub fn save(&self) -> io::Result<()> {
         fs::write(&self.path, self.lines
             .iter()
             .map(|line| match line {
