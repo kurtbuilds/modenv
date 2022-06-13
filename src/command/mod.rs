@@ -58,6 +58,7 @@ pub fn init() {
             path: PathBuf::from(".env"),
         };
         env.save().unwrap();
+        eprintln!(".env: Created using values from .env.example.");
         touch(Path::new(".env.production")).unwrap();
         check(EnvFile::read(PathBuf::from(".env.example")), vec![
             EnvFile::read(PathBuf::from(".env.production")),
