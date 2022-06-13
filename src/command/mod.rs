@@ -24,6 +24,10 @@ fn append(path: &Path, data: &str) -> io::Result<usize> {
         })
 }
 
+fn path_exists(path: &str) -> bool {
+    fs::metadata(Path::new(path)).is_ok()
+}
+
 fn find_gitignore() -> PathBuf {
     let mut cur = env::current_dir().unwrap();
     while cur.parent().is_some() {
@@ -50,23 +54,30 @@ pub fn init() {
 ").unwrap();
     }
 
-    if fs::metadata(Path::new(".env.example")).is_ok() {
-        let example = EnvFile::read(PathBuf::from(".env.example"));
-        let env = EnvFile {
-            modified: false,
-            lines: example.lines.clone(),
-            path: PathBuf::from(".env"),
-        };
-        env.save().unwrap();
-        eprintln!(".env: Created using values from .env.example.");
+    if !path_exists(".env") {
+        if path_exists(".env.example") {
+            let example = EnvFile::read(PathBuf::from(".env.example"));
+            let env = EnvFile {
+                modified: false,
+                lines: example.lines.clone(),
+                path: PathBuf::from(".env"),
+            };
+            env.save().unwrap();
+            eprintln!(".env: Created using values from .env.example.");
+        } else {
+            touch(Path::new(".env")).unwrap();
+        }
+    }
+    if !path_exists(".env.production") {
         touch(Path::new(".env.production")).unwrap();
-        check(EnvFile::read(PathBuf::from(".env.example")), vec![
-            EnvFile::read(PathBuf::from(".env.production")),
-        ], CheckOptions { force: true, quiet: true });
-    } else {
-        touch(Path::new(".env")).unwrap();
+        if path_exists(".env.example") {
+            check(EnvFile::read(PathBuf::from(".env.example")), vec![
+                EnvFile::read(PathBuf::from(".env.production")),
+            ], CheckOptions { force: true, quiet: true });
+        }
+    }
+    if !path_exists(".env.example") {
         touch(Path::new(".env.example")).unwrap();
-        touch(Path::new(".env.production")).unwrap();
     }
 }
 
