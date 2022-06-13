@@ -1,6 +1,6 @@
 [package]
 name = "modenv"
-version = "0.8.1"
+version = "0.8.2"
 edition = "2018"
 authors = ["Kurt Wolf <kurtwolfbuilds@gmail.com>"]
 description = "CLI to easily manage .env files and keep them consistent."
