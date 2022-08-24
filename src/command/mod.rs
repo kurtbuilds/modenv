@@ -42,16 +42,21 @@ fn find_gitignore() -> PathBuf {
     PathBuf::from_str(".gitignore").unwrap()
 }
 
+const DEFAULT_GITIGNORE_RULES: &str = "
+.env*
+!.env.example
+";
+
 pub fn init() {
     let gitignore_path = find_gitignore();
     let gitignore_content = fs::read_to_string(&gitignore_path).unwrap();
     if gitignore_content.contains(".env") {
+        // Frameworks with conventions about .env files 
+        // (eg Next.js that tracks .env but not .env.local)
+        // are expected to set their .gitignore properly in the first place
         eprintln!("{}: .gitignore already contains dotenv rules. Skipping addition of rules.", gitignore_path.display());
     } else {
-        append(&find_gitignore(), "
-.env*
-!.env.example
-").unwrap();
+        append(&find_gitignore(), DEFAULT_GITIGNORE_RULES).unwrap();
     }
 
     if !path_exists(".env") {
@@ -67,17 +72,17 @@ pub fn init() {
         } else {
             touch(Path::new(".env")).unwrap();
         }
-    }
-    if !path_exists(".env.production") {
-        touch(Path::new(".env.production")).unwrap();
-        if path_exists(".env.example") {
-            check(EnvFile::read(PathBuf::from(".env.example")), vec![
-                EnvFile::read(PathBuf::from(".env.production")),
-            ], CheckOptions { force: true, quiet: true });
+        if !path_exists(".env.production") {
+            touch(Path::new(".env.production")).unwrap();
+            if path_exists(".env.example") {
+                check(EnvFile::read(PathBuf::from(".env.example")), vec![
+                    EnvFile::read(PathBuf::from(".env.production")),
+                ], CheckOptions { force: true, quiet: true });
+            }
         }
-    }
-    if !path_exists(".env.example") {
-        touch(Path::new(".env.example")).unwrap();
+        if !path_exists(".env.example") {
+            touch(Path::new(".env.example")).unwrap();
+        }
     }
 }
 
