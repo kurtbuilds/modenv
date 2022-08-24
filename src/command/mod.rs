@@ -72,17 +72,17 @@ pub fn init() {
         } else {
             touch(Path::new(".env")).unwrap();
         }
-    }
-    if !path_exists(".env.production") {
-        touch(Path::new(".env.production")).unwrap();
-        if path_exists(".env.example") {
-            check(EnvFile::read(PathBuf::from(".env.example")), vec![
-                EnvFile::read(PathBuf::from(".env.production")),
-            ], CheckOptions { force: true, quiet: true });
+        if !path_exists(".env.production") {
+            touch(Path::new(".env.production")).unwrap();
+            if path_exists(".env.example") {
+                check(EnvFile::read(PathBuf::from(".env.example")), vec![
+                    EnvFile::read(PathBuf::from(".env.production")),
+                ], CheckOptions { force: true, quiet: true });
+            }
         }
-    }
-    if !path_exists(".env.example") {
-        touch(Path::new(".env.example")).unwrap();
+        if !path_exists(".env.example") {
+            touch(Path::new(".env.example")).unwrap();
+        }
     }
 }
 
