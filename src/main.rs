@@ -208,10 +208,10 @@ changes.
         .subcommand(Command::new("init")
             .about("Create .env, .env.example, and .env.production, and add .env to .gitignore.")
         )
-        .subcommand(add_single_reference_file_args(Command::new("show"))
+        .subcommand(add_reference_file_args(Command::new("show"))
             .about("Prints the pairs from an envfile. Can be used for export: $ export \"$(modenv show)\"")
         )
-        .subcommand(add_single_reference_file_args(Command::new("run"))
+        .subcommand(add_reference_file_args(Command::new("run"))
             .about("Run a command with the environment variables set. If a envfile is not provided, defaults to .env. Run `modenv run -h` for information on variable priority.")
             .after_help("Run a command with the environment variables set. If a envfile is not provided, defaults to .env.
 
@@ -232,14 +232,6 @@ Example:
     FOO=1 modenv run -e .env,.env.local -- FOO=4 echo hi
 
 Will run with FOO=4, because it is the highest precedence.")
-            .arg(Arg::new("env")
-                .short('e')
-                .long("env")
-                .value_name("FILE")
-                .use_value_delimiter(true)
-                .multiple_occurrences(true)
-                .help("Use FILE as the reference envfile.")
-            )
             .arg(Arg::new("command")
                 .required(true)
                 .min_values(1)
