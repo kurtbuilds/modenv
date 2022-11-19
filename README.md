@@ -72,6 +72,12 @@ This command additionally will replicate comments and ordering from the referenc
 
     cargo install modenv
 
+# Additional Tips & Tricks
+
+#### Source an env file
+
+    export $(modenv show)
+
 # Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
