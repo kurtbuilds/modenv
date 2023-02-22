@@ -23,7 +23,9 @@ fn exit_with(message: &str) -> ! {
 fn default_reference_envfile() -> PathBuf {
     for path in &[".env.local",
         ".env.development",
-        ".env"] {
+        ".env",
+        "../.env",
+    ] {
         let p = PathBuf::from_str(path).unwrap();
         if p.exists() {
             return p;
