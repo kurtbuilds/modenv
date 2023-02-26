@@ -22,5 +22,6 @@ keywords = [
 ]
 
 [dependencies]
-clap = { version = "=3.1", features = ["color", "env", "suggestions"]}
+clap = { version = "4.1.6", features = ["color", "env", "suggestions", "derive"]}
 shell-escape = "0.1.5"
+env2 = "0.2.0"
