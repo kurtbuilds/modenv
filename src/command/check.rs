@@ -90,7 +90,7 @@ Or run this command to remove them from all files
             dest_env.reorder_based_on(&source_env);
         }
         // I think the exit is causing them not to save because we save on drop? Forcibly drop them Yay!
-        for dest_env in dest_envs.iter_mut() {
+        for dest_env in dest_envs.iter() {
             dest_env.save_if_modified().unwrap();
         }
     } else if has_missing {
