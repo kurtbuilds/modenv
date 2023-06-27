@@ -13,6 +13,7 @@ pub fn touch(path: &Path) -> io::Result<()> {
 
 pub fn append(path: &Path, data: &str) -> io::Result<usize> {
     OpenOptions::new()
+        .create(true)
         .append(true)
         .open(path)
         .and_then(|mut file| {
@@ -51,14 +52,14 @@ pub struct Init {}
 impl Init {
     pub fn run(self) {
         let gitignore_path = find_gitignore();
-        let gitignore_content = fs::read_to_string(&gitignore_path).unwrap();
+        let gitignore_content = fs::read_to_string(&gitignore_path).unwrap_or_default();
         if gitignore_content.contains(".env") {
             // Frameworks with conventions about .env files
             // (eg Next.js that tracks .env but not .env.local)
             // are expected to set their .gitignore properly in the first place
             eprintln!("{}: .gitignore already contains dotenv rules. Skipping addition of rules.", gitignore_path.display());
         } else {
-            append(&find_gitignore(), DEFAULT_GITIGNORE_RULES).unwrap();
+            append(&gitignore_path, DEFAULT_GITIGNORE_RULES).unwrap();
         }
 
         if !path_exists(".env") {
