@@ -174,7 +174,7 @@ checksum = "09fc20d2ca12cb9f044c93e3bd6d32d523e6e2ec3db4f7b2939cd99026ecd3f0"
 
 [[package]]
 name = "modenv"
-version = "0.10.2"
+version = "0.10.3"
 dependencies = [
  "clap",
  "env2",
