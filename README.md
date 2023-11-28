@@ -6,7 +6,7 @@
     <img src="https://img.shields.io/github/stars/kurtbuilds/modenv.svg?style=flat-square" alt="Stars" />
 </a>
 <a href="https://github.com/kurtbuilds/modenv/actions">
-    <img src="https://img.shields.io/github/workflow/status/kurtbuilds/modenv/test?style=flat-square" alt="Build Status" />
+    <img src="https://img.shields.io/github/actions/workflow/status/kurtbuilds/modenv/test.yaml?branch=master&style=flat-square" alt="Build Status" />
 </a>
 <a href="https://crates.io/crates/modenv">
     <img src="https://img.shields.io/crates/d/modenv?style=flat-square" alt="Downloads" />
