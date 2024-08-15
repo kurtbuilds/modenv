@@ -23,7 +23,7 @@ use env2::EnvFile;
 #[derive(clap::Parser, Debug)]
 pub struct Run {
     /// The command to run. The command can begin with variables in KEY=VALUE format.
-    command: Vec<String>,
+    pub command: Vec<String>,
 }
 
 impl Run {

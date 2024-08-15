@@ -1,5 +1,6 @@
 mod command;
 
+use std::mem::take;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
@@ -33,6 +34,7 @@ use command::*;
 ///     modenv check
 #[derive(Parser)]
 #[command(author, version, about)]
+#[command(arg_required_else_help(true))]
 pub struct Cli {
     #[clap(subcommand)]
     command: Option<Command>,
@@ -60,7 +62,7 @@ pub struct Cli {
     #[clap(short, long, global = true)]
     env_file: Vec<String>,
 
-    pairs: Vec<String>,
+    subcommand_args: Vec<String>,
 }
 
 impl Cli {
@@ -138,12 +140,24 @@ fn default_envfile() -> PathBuf {
 fn main() {
     let mut cli = Cli::parse();
 
-    let command: Option<Command> = std::mem::replace(&mut cli.command, None);
-    match command.unwrap_or_else(|| Command::Add(Add {
-        force: false,
-        all: false,
-        pairs: std::mem::replace(&mut cli.pairs, vec![])
-    })) {
+    let command: Option<Command> = take(&mut cli.command);
+    let command = if let Some(c) = command {
+        c
+    } else {
+        let first = cli.subcommand_args.iter().next().unwrap();
+        if first.contains('=') {
+            Command::Add(Add {
+                force: false,
+                all: false,
+                pairs: take(&mut cli.subcommand_args),
+            })
+        } else {
+            Command::Run(Run {
+                command: take(&mut cli.subcommand_args),
+            })
+        }
+    };
+    match command {
         Command::Init(init) => init.run(),
         Command::Add(add) => add.run(&cli),
         Command::Check(check) => check.run(&cli),
